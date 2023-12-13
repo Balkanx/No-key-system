@@ -1,46 +1,43 @@
--- FullScript
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local StarterGui = game.Players.LocalPlayer:WaitForChild("PlayerGui"):WaitForChild("StarterGui")
-local playerScripts = game.Players.LocalPlayer:WaitForChild("PlayerScripts")
+local kavoUi = loadstring(game:HttpGet("https://pastebin.com/raw/vff1bQ9F"))()
+local window = kavoUi.CreateLib("Tps Street Soccer | Chatgpt", "DarkTheme")
 
--- Create UI
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "AdjustReachGui"
-screenGui.Parent = StarterGui
+local Tab = window:NewTab("Reach+Reaction")
 
-local textButton = Instance.new("TextButton")
-textButton.Size = UDim2.new(0, 200, 0, 50)
-textButton.Position = UDim2.new(0.5, -100, 0.9, -75)
-textButton.Text = "Adjust Reach (1-8)"
-textButton.TextColor3 = Color3.new(1, 1, 1)
-textButton.BackgroundColor3 = Color3.new(0.5, 0, 0.5) -- Purple color
-textButton.Parent = screenGui
+local Section = Tab:NewSection("Reach+Reaction")
 
--- Create LocalScript for UI
-local localScript = Instance.new("LocalScript")
-localScript.Name = "AdjustReachScript"
-localScript.Parent = playerScripts
+Section:NewButton("Reach script", "ButtonInfo", function()
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local ServerScriptService = game:GetService("ServerScriptService")
 
-local textButton = screenGui:WaitForChild("TextButton")
+    local remoteEvent = Instance.new("RemoteEvent")
+    remoteEvent.Name = "AdjustReachEvent"
+    remoteEvent.Parent = ReplicatedStorage
 
-textButton.MouseButton1Click:Connect(function()
-    local reachValue = tonumber(prompt("Enter Reach Value (1-8):") or "")
-    if reachValue and reachValue >= 1 and reachValue <= 8 then
-        game.ReplicatedStorage.AdjustReachEvent:FireServer(reachValue)
-    else
-        warn("Invalid reach value. Please enter a number between 1 and 8.")
+    local function onAdjustReach(player, reachValue)
+        -- Ensure the reach value is within a valid range (1-8)
+        reachValue = math.clamp(reachValue, 1, 8)
+
+        -- Apply the reach modification on the server side
+        -- You can implement your own logic here based on the game design
+        print(player.Name .. " adjusted reach to " .. reachValue)
+
+        -- Example: Set the player's walk speed based on reach value
+        player.Character:WaitForChild("Humanoid").WalkSpeed = 16 + (reachValue * 2)
     end
+
+    remoteEvent.OnServerEvent:Connect(onAdjustReach)
 end)
 
--- Create Server Script
-local remoteEvent = Instance.new("RemoteEvent")
-remoteEvent.Name = "AdjustReachEvent"
-remoteEvent.Parent = ReplicatedStorage
+Section:NewButton("Reaction", "ButtonInfo", function()
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local player = game.Players.LocalPlayer
 
-local function onAdjustReach(player, reachValue)
-    reachValue = math.clamp(reachValue, 1, 8)
-    print(player.Name .. " adjusted reach to " .. reachValue)
-    player.Character:WaitForChild("Humanoid").WalkSpeed = 16 + (reachValue * 2)
-end
+    local remoteEvent = ReplicatedStorage:WaitForChild("AdjustReachEvent")
 
-remoteEvent.OnServerEvent:Connect(onAdjustReach)
+    local function adjustReach(reachValue)
+        remoteEvent:FireServer(reachValue)
+    end
+
+    -- Example: Adjust reach to 5
+    adjustReach(5)
+end)
